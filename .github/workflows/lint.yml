@@ -1,0 +1,29 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift-format:
+    name: swift-format
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      # Strict lint deferred until the codebase is fully formatted — for now
+      # we surface findings as annotations without failing CI. Flip to
+      # `--strict` once `swift format -i -r Sources Tests` has been run and
+      # committed.
+      - name: Lint sources
+        run: swift format lint --recursive Sources Tests

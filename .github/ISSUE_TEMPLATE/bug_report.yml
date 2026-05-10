@@ -1,0 +1,72 @@
+name: Bug report
+description: Something isn't working right
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Filling these in up
+        front means we can skip the round-trip on basics.
+
+  - type: input
+    id: layerlens-version
+    attributes:
+      label: LayerLens version
+      description: Menu bar → LayerLens → About.
+      placeholder: e.g. 0.3.0
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: e.g. 14.5 (Sonoma) or 15.1 (Sequoia)
+    validations:
+      required: true
+
+  - type: input
+    id: mac-model
+    attributes:
+      label: Mac model + chip
+      placeholder: e.g. MacBook Pro M2, Mac mini M4
+    validations:
+      required: true
+
+  - type: input
+    id: keyboard
+    attributes:
+      label: Keyboard
+      description: Make / model and firmware (QMK or Vial; with or without the layerlens_notify module).
+      placeholder: e.g. Keychron Q1 Pro, Vial 0.7 + layerlens_notify
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: What did you expect vs what happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open LayerLens
+        2. Connect <keyboard>
+        3. Press <key> on layer <N>
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (optional but helpful)
+      description: |
+        LayerLens writes logs to `~/Library/Logs/LayerLens/`. Paste the
+        relevant section here, or attach the file.
+      render: shell

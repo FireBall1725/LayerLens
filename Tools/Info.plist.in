@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template Info.plist consumed by Tools/build_app.sh; placeholders are
+     substituted at build time via /usr/bin/sed. Do not commit a populated
+     copy of this file; regenerate from this template each release. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>LayerLens</string>
+    <key>CFBundleIdentifier</key>
+    <string>press.fireball1725.LayerLens</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>LayerLens</string>
+    <key>CFBundleDisplayName</key>
+    <string>LayerLens</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>__VERSION__</string>
+    <key>CFBundleVersion</key>
+    <string>__VERSION__</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <!-- Menu-bar app: no Dock icon, doesn't appear in ⌘-Tab. AppDelegate also
+         calls setActivationPolicy(.accessory) at runtime so this is belt-and-
+         braces, but having it in the plist means Launchpad/Finder agree. -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>© 2026 FireBall1725 (Adaléa). Released under GPL-3.0.</string>
+
+    <!-- Sparkle auto-updater configuration. -->
+    <!-- Public half of the EdDSA keypair used to sign released dmgs. The
+         matching private key is the SPARKLE_PRIVATE_KEY GitHub secret;
+         release.yml runs `sign_update` against the dmg to populate the
+         appcast.xml's sparkle:edSignature attribute. -->
+    <key>SUPublicEDKey</key>
+    <string>DazspJEw0ancvkObE2Xm66GZ62zp2f0AOLhAOfnzdSE=</string>
+    <!-- We override this at runtime in UpdateController.feedURLString, but
+         Sparkle still requires an SUFeedURL key in the plist as a sanity
+         check on first launch. The placeholder is fine since the delegate
+         method takes precedence. -->
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/FireBall1725/LayerLens/main/appcast.xml</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <!-- 86400 seconds = once a day. Sparkle skips checks when the network
+         is offline or the user dismissed the most recent prompt with
+         "Remind Me Later". -->
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
+</dict>
+</plist>

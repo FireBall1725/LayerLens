@@ -1,0 +1,9 @@
+{
+    "module_name": "LayerLens Notify",
+    "maintainer": "FireBall1725",
+    "license": "GPL-3.0-only",
+    "url": "https://github.com/FireBall1725/LayerLens",
+    "features": {
+        "raw": true
+    }
+}

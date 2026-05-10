@@ -1,0 +1,56 @@
+# git-cliff configuration. Reads commit messages between tags and emits
+# the GitHub Release body. See https://git-cliff.org/docs/configuration.
+#
+# Convention: Conventional Commits (feat: / fix: / docs: / refactor: /
+# perf: / chore: / test:). Non-conforming commits still appear in the
+# notes (see `filter_unconventional = false`); they just don't get
+# categorised. Bookkeeping commits like `appcast:` / `Bump to v` are
+# explicitly skipped: they're noise to end users.
+
+[changelog]
+header = ""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+
+{% for commit in commits %}
+- {{ commit.message | split(pat="\\n") | first | upper_first | trim }}\
+{% endfor %}
+{% endfor %}\n
+"""
+trim = true
+postprocessors = []
+
+[git]
+conventional_commits = true
+# Keep non-conforming commits visible; just bucket them as "Other".
+filter_unconventional = false
+require_conventional = false
+split_commits = false
+filter_commits = true
+sort_commits = "oldest"
+topo_order = false
+protect_breaking_commits = true
+
+commit_parsers = [
+    # Skip noise: these are bot / bookkeeping commits.
+    { message = "^appcast", skip = true },
+    { message = "^Bump to v", skip = true },
+    { message = "^Merge branch", skip = true },
+
+    # Conventional Commits → human-readable group titles.
+    { message = "^feat", group = "✨ Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "♻️ Refactor" },
+    { message = "^docs", group = "📚 Documentation" },
+    { message = "^test", group = "✅ Tests" },
+    { message = "^build", group = "🔧 Build" },
+    { message = "^ci", group = "🤖 CI" },
+    { message = "^style", group = "💄 Styling" },
+    { message = "^chore", group = "🧹 Chore" },
+    { message = "^revert", group = "⏪ Revert" },
+
+    # Anything else lands in "Other" so we don't lose it.
+    { message = ".*", group = "Other" },
+]

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Privacy questions
+    url: https://github.com/FireBall1725/LayerLens/blob/main/PRIVACY.md
+    about: How LayerLens handles data, what telemetry is opt-in.
+  - name: Security vulnerabilities
+    url: https://github.com/FireBall1725/LayerLens/security/advisories/new
+    about: Report security issues privately, not as public issues.

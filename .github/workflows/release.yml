@@ -1,0 +1,215 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (without leading v, e.g. 0.1.0)"
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-dmg:
+    name: Build & Sign DMG
+    runs-on: macos-latest
+    permissions:
+      contents: write   # needed to attach the dmg to the GitHub Release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+            echo "::error::Version '$VERSION' must be SemVer (e.g. 0.1.0)."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version $VERSION"
+
+      # ─── Code-signing (skipped on PRs and forks where secrets are absent) ───
+      # The release workflow expects four secrets, all pulled from the same
+      # Apple Developer account librarium-ios uses:
+      #
+      #   MACOS_CERT_BASE64       Developer ID Application .p12, base64-encoded
+      #   MACOS_CERT_PASSWORD     password for that .p12
+      #   KEYCHAIN_PASSWORD       any string; gates the temp keychain
+      #   ASC_KEY_ID/ASC_ISSUER_ID/ASC_PRIVATE_KEY  App Store Connect key for notarytool
+      #
+      # If MACOS_CERT_BASE64 is empty, the workflow ad-hoc signs the app and
+      # skips notarization — fine for personal-use builds, will trigger
+      # Gatekeeper on other Macs.
+      - name: Detect signing config
+        id: signing
+        run: |
+          if [[ -n "${{ secrets.MACOS_CERT_BASE64 }}" ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "Using Developer ID signing + notarization"
+          else
+            echo "mode=adhoc" >> "$GITHUB_OUTPUT"
+            echo "::warning::No MACOS_CERT_BASE64 secret — falling back to ad-hoc signing (no notarization)."
+          fi
+
+      - name: Install signing certificate
+        if: steps.signing.outputs.mode == 'full'
+        env:
+          CERTIFICATE_BASE64:    ${{ secrets.MACOS_CERT_BASE64 }}
+          CERTIFICATE_PASSWORD:  ${{ secrets.MACOS_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD:     ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -t cert -f pkcs12 \
+            -k "$KEYCHAIN_PATH" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" \
+            "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | xargs)
+
+      - name: Build .app bundle
+        run: Tools/build_app.sh "${{ steps.version.outputs.version }}"
+
+      - name: Sign .app (Developer ID)
+        if: steps.signing.outputs.mode == 'full'
+        run: |
+          codesign --deep --force --options runtime --timestamp \
+            --sign "Developer ID Application" \
+            dist/LayerLens.app
+          codesign --verify --verbose=2 dist/LayerLens.app
+
+      - name: Sign .app (ad-hoc fallback)
+        if: steps.signing.outputs.mode == 'adhoc'
+        run: |
+          codesign --deep --force --sign - dist/LayerLens.app
+          codesign --verify --verbose=2 dist/LayerLens.app
+
+      - name: Install create-dmg
+        # Pre-installed on macos-latest? Install defensively in case the
+        # runner image doesn't include it; brew is no-op when it's there.
+        run: brew install create-dmg
+
+      - name: Build DMG
+        run: Tools/build_dmg.sh "${{ steps.version.outputs.version }}"
+
+      - name: Notarize DMG
+        if: steps.signing.outputs.mode == 'full'
+        env:
+          ASC_KEY_ID:     ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID:  ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          echo -n "$ASC_PRIVATE_KEY" > "$KEY_PATH"
+          xcrun notarytool submit \
+            "dist/LayerLens-${{ steps.version.outputs.version }}.dmg" \
+            --key "$KEY_PATH" \
+            --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "dist/LayerLens-${{ steps.version.outputs.version }}.dmg"
+
+      - name: Sign DMG for Sparkle (EdDSA)
+        # Run AFTER notarisation/stapling so the signature reflects the final
+        # bytes users will download. sign_update emits "sparkle:edSignature=..."
+        # and "length=..." attributes; we only need the signature here, since
+        # update_appcast.sh recomputes length from the local file.
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        id: sparkle
+        run: |
+          curl -sSL -o /tmp/Sparkle.tar.xz \
+            https://github.com/sparkle-project/Sparkle/releases/download/2.7.2/Sparkle-2.7.2.tar.xz
+          mkdir -p /tmp/sparkle-bin && tar -xf /tmp/Sparkle.tar.xz -C /tmp/sparkle-bin
+          PRIV_FILE="$RUNNER_TEMP/sparkle_priv.key"
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$PRIV_FILE"
+          OUTPUT=$(/tmp/sparkle-bin/bin/sign_update -f "$PRIV_FILE" \
+            "dist/LayerLens-${{ steps.version.outputs.version }}.dmg")
+          rm -f "$PRIV_FILE"
+          # Output looks like: sparkle:edSignature="..." length="..."
+          ED_SIG=$(echo "$OUTPUT" | sed -E 's/.*sparkle:edSignature="([^"]+)".*/\1/')
+          echo "edSignature=$ED_SIG" >> "$GITHUB_OUTPUT"
+
+      - name: Update appcast.xml
+        run: |
+          Tools/update_appcast.sh \
+            "${{ steps.version.outputs.version }}" \
+            "dist/LayerLens-${{ steps.version.outputs.version }}.dmg" \
+            "${{ steps.sparkle.outputs.edSignature }}"
+
+      - name: Commit appcast.xml back to main
+        # The release workflow runs on the tag commit; pushing back to main
+        # records the new <item> so already-installed copies of LayerLens
+        # see the update on their next scheduled check. Save the new
+        # appcast first since `git checkout main` would discard the
+        # uncommitted change.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp appcast.xml "$RUNNER_TEMP/appcast.xml"
+          git fetch origin main
+          git checkout -B main origin/main
+          cp "$RUNNER_TEMP/appcast.xml" appcast.xml
+          git add appcast.xml
+          if git diff --cached --quiet; then
+            echo "appcast.xml unchanged — skipping commit"
+          else
+            git commit -m "appcast: publish v${{ steps.version.outputs.version }}"
+            git push origin main
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LayerLens-${{ steps.version.outputs.version }}-dmg
+          path: dist/LayerLens-${{ steps.version.outputs.version }}.dmg
+
+      # Generate the Release body from git history. `--latest` reads
+      # commits between the previous tag and the current one and groups
+      # them by Conventional-Commits prefix per `cliff.toml`. Replaces
+      # GitHub's auto-generated notes (those rely on merged PRs, which
+      # we don't have when shipping straight from main).
+      - name: Generate changelog
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        id: changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/LayerLens-${{ steps.version.outputs.version }}.dmg
+          body: ${{ steps.changelog.outputs.content }}
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+
+      - name: Clean up keychain
+        if: always() && steps.signing.outputs.mode == 'full'
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true

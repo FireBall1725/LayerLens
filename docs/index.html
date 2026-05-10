@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LayerLens — see your keyboard's active layer, in real time</title>
+<meta name="description" content="LayerLens is a native macOS menu-bar app that mirrors the active layers of your QMK or Vial keyboard as a floating overlay. Live layer events, live keystroke highlights, per-keyboard themes.">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="LayerLens — keyboard layer overlay for macOS">
+<meta property="og:description" content="Native macOS menu-bar app that mirrors the active layers of your QMK or Vial keyboard as a floating overlay.">
+<meta property="og:url" content="https://fireball1725.github.io/LayerLens/">
+
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap">
+
+<link rel="stylesheet" href="styles.css?v=27">
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- Ambient floating keycaps. Pure decoration, behind everything,
+     pointer-events: none, hidden on small screens. Each key has its
+     own --x/--y (position) and --d (animation delay) so they drift at
+     unique phases. -->
+<div class="page-keys" aria-hidden="true">
+  <!-- Ambient keys, positioned in the upper ~75% of the page. The
+       download section + footer are intentionally key-free; the .page-keys
+       container itself stops above them.
+
+       The inner wrapper is what the parallax script translates. The
+       outer .page-keys has overflow:hidden so the inner's transformed
+       extent is clipped at the layout box — body's scroll height stays
+       fixed regardless of how far the inner is translated. -->
+  <div class="page-keys__inner">
+  <span class="page-key" style="--x: 4%;  --y: 4%;   --d:  .0s; --dur: 14s; --r: -7deg;">MO(0)</span>
+  <span class="page-key" style="--x: 88%; --y: 6%;   --d: 1.1s; --dur: 17s; --r:  5deg;">TG(1)</span>
+  <span class="page-key" style="--x: 14%; --y: 11%;  --d:  .6s; --dur: 13s; --r:  3deg;">⌘</span>
+  <span class="page-key" style="--x: 30%; --y: 8%;   --d: 1.4s; --dur: 16s; --r:  4deg;"><svg class="page-key__icon page-key__icon--outline" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 9 L19 9 L12 18 Z"/></svg></span>
+  <span class="page-key page-key--lg" style="--x: 72%; --y: 13%; --d: 2.3s; --dur: 19s; --r: -4deg;">MO(2)</span>
+
+  <span class="page-key" style="--x: 92%; --y: 18%; --d:  .9s; --dur: 16s; --r:  8deg;">A</span>
+  <span class="page-key" style="--x: 44%; --y: 20%; --d: 1.5s; --dur: 18s; --r: -5deg;"><svg class="page-key__icon page-key__icon--outline" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 9 L19 9 L12 18 Z"/></svg></span>
+  <span class="page-key" style="--x: 6%;  --y: 22%; --d: 1.7s; --dur: 18s; --r: -10deg;">F1</span>
+
+  <span class="page-key page-key--sm" style="--x: 38%; --y: 27%; --d:  .3s; --dur: 12s; --r:  6deg;">↑</span>
+  <span class="page-key" style="--x: 60%; --y: 25%; --d: 2.4s; --dur: 14s; --r: -8deg;"><svg class="page-key__icon page-key__icon--outline" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 9 L19 9 L12 18 Z"/></svg></span>
+  <span class="page-key" style="--x: 84%; --y: 30%; --d: 2.1s; --dur: 15s; --r: -3deg;">⌃</span>
+  <span class="page-key" style="--x: 12%; --y: 34%; --d: 1.4s; --dur: 17s; --r:  9deg;">TT(2)</span>
+  <span class="page-key page-key--sm" style="--x: 60%; --y: 37%; --d: 2.7s; --dur: 13s; --r: -6deg;">K</span>
+
+  <span class="page-key" style="--x: 4%;  --y: 43%; --d:  .5s; --dur: 16s; --r:  4deg;">⌥</span>
+  <span class="page-key" style="--x: 36%; --y: 41%; --d: 1.9s; --dur: 17s; --r:  7deg;">TO(1)</span>
+  <span class="page-key" style="--x: 56%; --y: 44%; --d:  .8s; --dur: 15s; --r: -10deg;"><svg class="page-key__icon page-key__icon--outline" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 9 L19 9 L12 18 Z"/></svg></span>
+  <span class="page-key page-key--lg" style="--x: 90%; --y: 45%; --d: 1.8s; --dur: 20s; --r: -8deg;">DF(3)</span>
+  <span class="page-key" style="--x: 28%; --y: 49%; --d:  .8s; --dur: 14s; --r: 11deg;">Esc</span>
+  <span class="page-key" style="--x: 70%; --y: 52%; --d: 2.5s; --dur: 17s; --r: -5deg;">Del</span>
+
+  <span class="page-key" style="--x: 8%;  --y: 56%; --d: 1.2s; --dur: 19s; --r:  7deg;">F4</span>
+  <span class="page-key" style="--x: 52%; --y: 59%; --d:  .2s; --dur: 13s; --r: -2deg;"><svg class="page-key__icon page-key__icon--filled" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 6v4a3 3 0 0 1-3 3H8.83l3.58 3.59L11 18l-6-6 6-6 1.41 1.41L8.83 11H16V6z"/></svg></span>
+  <span class="page-key page-key--sm" style="--x: 86%; --y: 62%; --d: 2.0s; --dur: 16s; --r:  5deg;">→</span>
+  <span class="page-key" style="--x: 16%; --y: 65%; --d: 1.6s; --dur: 18s; --r: -9deg;">TG(4)</span>
+
+  <span class="page-key" style="--x: 78%; --y: 68%; --d:  .4s; --dur: 15s; --r:  6deg;">⌘</span>
+  <span class="page-key" style="--x: 5%;  --y: 71%; --d: 2.2s; --dur: 14s; --r: -7deg;">TO(0)</span>
+  <span class="page-key page-key--sm" style="--x: 44%; --y: 73%; --d: 1.0s; --dur: 12s; --r:  3deg;">←</span>
+  <span class="page-key" style="--x: 60%; --y: 72%; --d: 1.6s; --dur: 18s; --r:  9deg;"><svg class="page-key__icon page-key__icon--outline" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 9 L19 9 L12 18 Z"/></svg></span>
+  <span class="page-key" style="--x: 92%; --y: 75%; --d:  .7s; --dur: 17s; --r: -10deg;">Tab</span>
+
+  <span class="page-key" style="--x: 22%; --y: 77%; --d: 2.4s; --dur: 19s; --r:  8deg;">Shift</span>
+  <span class="page-key" style="--x: 64%; --y: 79%; --d: 1.3s; --dur: 16s; --r: -4deg;">F7</span>
+  </div>
+</div>
+
+<header class="site-nav">
+  <a href="#" class="brand" aria-label="LayerLens home">
+    <img src="assets/app-icon-64.png" alt="" class="brand__icon" width="32" height="32">
+    <span class="brand__word">LayerLens</span>
+  </a>
+  <nav class="site-nav__links" aria-label="Primary">
+    <a href="#features">Features</a>
+    <a href="#setup">Setup</a>
+    <a href="https://github.com/FireBall1725/LayerLens" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <!-- ───────────────────────────────────────── HERO ─── -->
+  <section class="hero">
+    <div class="hero__bg" aria-hidden="true">
+      <div class="hero__grid"></div>
+      <div class="hero__glow"></div>
+    </div>
+
+    <div class="hero__copy">
+      <div class="eyebrow">
+        <span class="eyebrow__dot"></span>
+        <span class="eyebrow__text" data-version-target="eyebrow">v0.4.0 &nbsp;·&nbsp; macOS 14+</span>
+      </div>
+      <h1 class="hero__title">
+        See your keyboard's<br>
+        <em class="hero__title-em">
+          <span class="hero__cycle" aria-live="polite">
+            <span class="hero__cycle-spacer" aria-hidden="true">active</span>
+            <span class="hero__cycle-state is-on">active</span>
+            <span class="hero__cycle-state">L0</span>
+            <span class="hero__cycle-state">L1</span>
+            <span class="hero__cycle-state">L2</span>
+            <span class="hero__cycle-state">L3</span>
+          </span> layer.
+        </em>
+      </h1>
+      <p class="hero__lede">
+        A native macOS overlay that mirrors the live layer state of your
+        QMK or Vial keyboard. Pin it on screen, watch it flash on every
+        layer change, theme it like the rest of your battlestation.
+        Free, open source, signed and notarised.
+      </p>
+      <div class="hero__ctas">
+        <a class="cta cta--primary" href="https://github.com/FireBall1725/LayerLens/releases/latest/download/LayerLens-0.4.0.dmg" data-version-target="href">
+          <span class="cta__keycap" aria-hidden="true">↓</span>
+          <span class="cta__label">Download for macOS</span>
+        </a>
+        <a class="cta cta--ghost" href="https://github.com/FireBall1725/LayerLens" rel="noopener">
+          <span class="cta__label">View on GitHub</span>
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <p class="hero__meta">
+        <span class="meta-chip">Free &amp; open source</span>
+        <span class="meta-chip">GPL-3.0</span>
+        <span class="meta-chip meta-chip--mono">≈ 2.5 MB DMG</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────── FEATURES ─── -->
+  <section class="features" id="features">
+    <header class="section-head">
+      <span class="layer-pill">L0</span>
+      <h2 class="section-title">Built for people<br>who care about keys.</h2>
+      <p class="section-lede">
+        LayerLens runs in your menu bar, sees every layer your keyboard
+        broadcasts, and surfaces it in a panel that's actually pleasant
+        to look at. No daemon to babysit, no Electron.
+      </p>
+    </header>
+
+    <article class="feature">
+      <div class="feature__copy">
+        <span class="layer-pill layer-pill--alt">L1 — overlay</span>
+        <h3>The active layer, on screen.</h3>
+        <p>
+          A non-activating panel that floats above your work, fades in on
+          every layer transition, and gets out of your way. Pin it for a
+          live view; let it flash if you only need a glance. Per-board
+          theming, custom labels, your choice of font.
+        </p>
+      </div>
+      <figure class="feature__art feature__art--right">
+        <img src="assets/screenshots/main-overlay.png"
+             alt="Main floating overlay showing all keys of a Kyria split keyboard"
+             loading="lazy">
+      </figure>
+    </article>
+
+    <article class="feature feature--reverse">
+      <div class="feature__copy">
+        <span class="layer-pill layer-pill--alt">L2 — config</span>
+        <h3>One Configure window per keyboard.</h3>
+        <p>
+          Rename labels, browse layers, set the layout source, see live
+          stats — protocol version, layer count, whether the firmware
+          module is responding. Plug a different board in and the window
+          re-shapes itself to match.
+        </p>
+      </div>
+      <figure class="feature__art feature__art--left">
+        <img src="assets/screenshots/keyboard-configuration.png"
+             alt="The per-keyboard Configure window showing the keymap, layer picker, and status row"
+             loading="lazy">
+      </figure>
+    </article>
+
+    <article class="feature feature--full">
+      <div class="feature__copy feature__copy--center">
+        <span class="layer-pill layer-pill--alt">L3 — themes</span>
+        <h3>Pick a palette. Or build your own.</h3>
+        <p>
+          All the programmer favourites — Dracula, Tokyo Night, Solarized,
+          Nord, Monokai, Gruvbox, One Dark — built in. Each colour role
+          (regular, modifier, layer, special, label) is independently
+          editable, with a live preview that paints onto your wallpaper
+          while you fiddle.
+        </p>
+      </div>
+
+      <div class="theme-galleries">
+        <!-- Each card renders a mini overlay using only CSS variables
+             scoped via data-theme. Palette values are the actual hex
+             codes from `Sources/LayerLens/ThemePreset.swift`, so what
+             you see here is what you'd see in LayerLens. Cards are
+             split into Dark and Light groups so the eye can compare
+             within a brightness band. -->
+        <h4 class="theme-gallery-title">
+          <span class="theme-gallery-title__label">Dark</span>
+          <span class="theme-gallery-title__count">9 themes</span>
+        </h4>
+        <div class="theme-gallery" aria-label="Dark themes">
+        <figure class="theme-card" data-theme="layerlens">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">LayerLens</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="dracula">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Dracula</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="solarized-dark">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Solarized Dark</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="monokai">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Monokai</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="nord">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Nord</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="tokyo-night">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Tokyo Night</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="one-dark">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">One Dark</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="gruvbox-dark">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Gruvbox Dark</figcaption>
+        </figure>
+        <figure class="theme-card" data-theme="github-dark">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">GitHub Dark</figcaption>
+        </figure>
+        </div>
+
+        <h4 class="theme-gallery-title">
+          <span class="theme-gallery-title__label">Light</span>
+          <span class="theme-gallery-title__count">4 themes</span>
+        </h4>
+        <div class="theme-gallery" aria-label="Light themes">
+        <figure class="theme-card theme-card--light" data-theme="solarized-light">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Solarized Light</figcaption>
+        </figure>
+        <figure class="theme-card theme-card--light" data-theme="github-light">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">GitHub Light</figcaption>
+        </figure>
+        <figure class="theme-card theme-card--light" data-theme="one-light">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">One Light</figcaption>
+        </figure>
+        <figure class="theme-card theme-card--light" data-theme="gruvbox-light">
+          <div class="theme-card__overlay">
+            <span class="tk tk--regular">Q</span><span class="tk tk--regular">W</span><span class="tk tk--regular">E</span><span class="tk tk--special">R</span><span class="tk tk--mod">⇧</span>
+            <span class="tk tk--regular">A</span><span class="tk tk--regular">S</span><span class="tk tk--regular">D</span><span class="tk tk--layer">MO</span><span class="tk tk--regular">⌘</span>
+          </div>
+          <figcaption class="theme-card__name">Gruvbox Light</figcaption>
+        </figure>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ───────────────────────────────────────── REQUIREMENTS ─── -->
+  <section class="requirements" id="requirements">
+    <header class="section-head">
+      <span class="layer-pill">R0</span>
+      <h2 class="section-title">What you'll need.</h2>
+      <p class="section-lede">
+        LayerLens reads layer events directly from your firmware over
+        Raw HID. Both ends need to be on board.
+      </p>
+    </header>
+
+    <div class="features__strip features__strip--two requirements__grid">
+      <div class="strip-card">
+        <span class="strip-card__chip">Your Mac</span>
+        <ul class="req-list">
+          <li>Apple Silicon, M1 or newer</li>
+          <li>macOS 14 Sonoma or later</li>
+          <li>≈ 5 MB on disk</li>
+        </ul>
+      </div>
+      <div class="strip-card">
+        <span class="strip-card__chip">Your keyboard</span>
+        <ul class="req-list">
+          <li>QMK or Vial firmware</li>
+          <li><code>layerlens_notify</code> module flashed — required for live layer events</li>
+          <li>USB or wireless connection with Raw HID exposed</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────── SETUP ─── -->
+  <section class="setup" id="setup">
+    <header class="section-head">
+      <span class="layer-pill">F0</span>
+      <h2 class="section-title">Live layer events?<br>Flash a tiny module.</h2>
+      <p class="section-lede">
+        VIA's protocol exposes the keymap, but doesn't expose live layer
+        changes. <code>layerlens_notify</code> is a 60-line QMK module
+        that fixes that. Two pure functions, you wire them in.
+      </p>
+    </header>
+
+    <div class="features__strip features__strip--three setup__platforms">
+      <div class="strip-card">
+        <span class="strip-card__chip">VIA</span>
+        <p>Talks to any QMK board with the standard <code>0xFF60 / 0x61</code> Raw HID interface.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-card__chip">Vial</span>
+        <p>Auto-fetches the layout from the firmware on protocol v9 boards.</p>
+      </div>
+      <div class="strip-card">
+        <span class="strip-card__chip">QMK</span>
+        <p>Plain QMK works too. Drop in the firmware module for live layer events.</p>
+      </div>
+    </div>
+
+    <div class="setup__grid">
+      <div class="setup__step">
+        <span class="step-num">01</span>
+        <h4>Drop the module in.</h4>
+        <p>
+          Copy <code>firmware/layerlens_notify/</code> from the repo to
+          your QMK userspace. Add it to your keymap:
+        </p>
+        <div class="code-block">
+          <div class="code-block__head">keymap.json</div>
+<pre class="code"><code><span class="t-p">{</span>
+  <span class="t-k">"modules"</span><span class="t-p">:</span> <span class="t-p">[</span><span class="t-s">"fireball1725/layerlens_notify"</span><span class="t-p">]</span>
+<span class="t-p">}</span></code></pre>
+        </div>
+      </div>
+
+      <div class="setup__step">
+        <span class="step-num">02</span>
+        <h4>Wire the layer-state recorder.</h4>
+        <p>Chain it from your <code>layer_state_set_user</code>:</p>
+        <div class="code-block">
+          <div class="code-block__head">keymap.c</div>
+<pre class="code"><code><span class="t-t">layer_state_t</span> <span class="t-fn">layer_state_set_user</span><span class="t-p">(</span><span class="t-t">layer_state_t</span> state<span class="t-p">) {</span>
+    <span class="t-r">return</span> <span class="t-fn">layer_state_set_layerlens_notify</span><span class="t-p">(</span>state<span class="t-p">);</span>
+<span class="t-p">}</span></code></pre>
+        </div>
+      </div>
+
+      <div class="setup__step">
+        <span class="step-num">03</span>
+        <h4>Wire the receiver.</h4>
+        <p>One snippet, pick what matches your firmware:</p>
+        <div class="code-block">
+          <div class="code-block__head">keymap.c — VIA or Vial</div>
+<pre class="code"><code><span class="t-r">bool</span> <span class="t-fn">via_command_kb</span><span class="t-p">(</span><span class="t-t">uint8_t</span> *data, <span class="t-t">uint8_t</span> length<span class="t-p">) {</span>
+    <span class="t-r">return</span> <span class="t-fn">layerlens_notify_handle_command</span><span class="t-p">(</span>data, length<span class="t-p">);</span>
+<span class="t-p">}</span></code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block__head">keymap.c — plain QMK</div>
+<pre class="code"><code><span class="t-r">void</span> <span class="t-fn">raw_hid_receive</span><span class="t-p">(</span><span class="t-t">uint8_t</span> *data, <span class="t-t">uint8_t</span> length<span class="t-p">) {</span>
+    <span class="t-r">if</span> <span class="t-p">(</span><span class="t-fn">layerlens_notify_handle_command</span><span class="t-p">(</span>data, length<span class="t-p">))</span> <span class="t-r">return</span><span class="t-p">;</span>
+<span class="t-p">}</span></code></pre>
+        </div>
+      </div>
+
+      <div class="setup__step">
+        <span class="step-num">04</span>
+        <h4>Build and flash.</h4>
+        <p>That's it. Open LayerLens; the Configure window's <strong>Live</strong> stat flips to <em>Yes</em> and the overlay starts flashing on every layer change.</p>
+        <a class="setup__doclink" href="https://github.com/FireBall1725/LayerLens/blob/main/firmware/layerlens_notify/PROTOCOL.md" rel="noopener">
+          Read the wire-format spec ↗
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<footer class="site-foot">
+  <div class="site-foot__inner">
+    <div class="site-foot__brand">
+      <img src="assets/app-icon-64.png" alt="" class="brand__icon brand__icon--small" width="26" height="26">
+      <span class="brand__word">LayerLens</span>
+    </div>
+    <nav class="site-foot__links" aria-label="Footer">
+      <a href="https://github.com/FireBall1725/LayerLens" rel="noopener">Source</a>
+      <a href="https://github.com/FireBall1725/LayerLens/releases" rel="noopener">Releases</a>
+      <a href="https://github.com/FireBall1725/LayerLens/blob/main/PRIVACY.md" rel="noopener">Privacy</a>
+      <a href="https://github.com/FireBall1725/LayerLens/blob/main/LICENSE" rel="noopener">GPL-3.0</a>
+    </nav>
+    <p class="site-foot__legal">
+      © 2026 FireBall1725 (Adaléa). Built with QMK and the VIA protocol.
+    </p>
+  </div>
+</footer>
+
+<script src="script.js?v=27" defer></script>
+</body>
+</html>
