@@ -5,6 +5,18 @@
         <link>https://github.com/FireBall1725/LayerLens</link>
         <description>Auto-update feed for LayerLens.</description>
         <language>en</language>
+                <item>
+            <title>Version 0.4.0</title>
+            <pubDate>Sun, 10 May 2026 00:49:47 +0000</pubDate>
+            <sparkle:version>0.4.0</sparkle:version>
+            <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v0.4.0/LayerLens-0.4.0.dmg"
+                length="2609702"
+                type="application/octet-stream"
+                sparkle:edSignature="Qz2PkTeE7GFSUcwrBTTfH8MaheGE1MH3CdNfZbOd4ngngf9BeB9yc252s7VQOAyTB6vYMNONEOaDfp20BOkYDA==" />
+        </item>
         <!-- The release workflow inserts new <item> entries above this comment. -->
     </channel>
 </rss>
