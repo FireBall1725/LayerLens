@@ -93,15 +93,26 @@ for bundle in "$BIN_DIR/"*.bundle; do
     # them; loadBundledManifest then falls through to Bundle.module, which
     # fatalErrors because the SPM bundle isn't in the .app at all. The app
     # launches fine and only dies when a keyboard is connected.
+    # Probe Contents/ rather than Contents/Resources/ so a nested bundle that
+    # carries only an Info.plist isn't mistaken for the flat layout: copying
+    # its root would put Contents/Info.plist inside the app, which is the same
+    # nesting this loop exists to avoid.
     src="$bundle"
-    if [[ -d "$bundle/Contents/Resources" ]]; then
+    if [[ -d "$bundle/Contents" ]]; then
+        [[ -d "$bundle/Contents/Resources" ]] || continue
         src="$bundle/Contents/Resources"
     fi
-    # Copying "$src/." rather than "$src"/* keeps this working for bundles with
-    # no resources at all. Several dependencies ship a PrivacyInfo.xcprivacy,
-    # so those collide and the last one wins — harmless for a distribution
-    # that never goes through App Store review.
-    cp -R "$src/." "$APP/Contents/Resources/"
+    # Copy entry by entry rather than "$src/." so PrivacyInfo.xcprivacy can be
+    # skipped. Contents/Resources/PrivacyInfo.xcprivacy is where an app's *own*
+    # privacy manifest lives, so flattening a dependency's copy there would
+    # make the signed bundle declare data collection LayerLens doesn't do
+    # (TelemetryDeck's declares DeviceID and ProductInteraction; telemetry here
+    # is opt-in and off by default). Three dependencies ship one, so the winner
+    # would come down to glob order.
+    for item in "$src"/*; do
+        [[ "$(basename "$item")" == "PrivacyInfo.xcprivacy" ]] && continue
+        cp -R "$item" "$APP/Contents/Resources/"
+    done
     echo "    Flattened resources from: $(basename "$bundle")"
 done
 shopt -u nullglob
@@ -112,6 +123,11 @@ shopt -u nullglob
 MANIFEST="$APP/Contents/Resources/via_keyboards_manifest.json"
 if [[ ! -f "$MANIFEST" ]]; then
     echo "Expected the VIA manifest at $MANIFEST after flattening SPM resource bundles, but it's missing." >&2
+    # Remove the half-built bundle. The release steps in the README are three
+    # separate commands, so a caller that doesn't check $? would go on to
+    # codesign this and hand it to build_dmg.sh, which only tests that the
+    # directory exists. That ships a DMG whose app dies on first keyboard.
+    rm -rf "$APP"
     exit 1
 fi
 
