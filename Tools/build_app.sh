@@ -84,12 +84,36 @@ shopt -u nullglob
 # Contents/Resources/ is enough and keeps the .app structure clean.
 shopt -s nullglob
 for bundle in "$BIN_DIR/"*.bundle; do
-    if [[ -d "$bundle" ]]; then
-        cp -R "$bundle"/* "$APP/Contents/Resources/" 2>/dev/null || true
-        echo "    Flattened resources from: $(basename "$bundle")"
+    [[ -d "$bundle" ]] || continue
+    # Current toolchains (Swift 6.3 / Xcode 26) emit resource bundles with the
+    # standard macOS layout, i.e. the resources live under Contents/Resources/.
+    # Older ones put them straight in the bundle root, so pick whichever side
+    # actually holds the files. Getting this wrong nests them at
+    # Contents/Resources/Contents/Resources/..., where Bundle.main can't find
+    # them; loadBundledManifest then falls through to Bundle.module, which
+    # fatalErrors because the SPM bundle isn't in the .app at all. The app
+    # launches fine and only dies when a keyboard is connected.
+    src="$bundle"
+    if [[ -d "$bundle/Contents/Resources" ]]; then
+        src="$bundle/Contents/Resources"
     fi
+    # Copying "$src/." rather than "$src"/* keeps this working for bundles with
+    # no resources at all. Several dependencies ship a PrivacyInfo.xcprivacy,
+    # so those collide and the last one wins — harmless for a distribution
+    # that never goes through App Store review.
+    cp -R "$src/." "$APP/Contents/Resources/"
+    echo "    Flattened resources from: $(basename "$bundle")"
 done
 shopt -u nullglob
+
+# Verify the flattening actually landed. An .app missing the VIA manifest
+# builds without complaint and only fails once a user plugs a keyboard in,
+# so fail the build here rather than ship something silently broken.
+MANIFEST="$APP/Contents/Resources/via_keyboards_manifest.json"
+if [[ ! -f "$MANIFEST" ]]; then
+    echo "Expected the VIA manifest at $MANIFEST after flattening SPM resource bundles, but it's missing." >&2
+    exit 1
+fi
 
 echo "==> Bundle ready: $APP"
 ls -la "$APP/Contents"
