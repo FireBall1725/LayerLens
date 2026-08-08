@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>LayerLens (pre-release)</title>
+        <link>https://github.com/FireBall1725/LayerLens</link>
+        <description>Auto-update feed for LayerLens.</description>
+        <language>en</language>
+                <item>
+            <title>Version 0.4.0</title>
+            <pubDate>Sun, 10 May 2026 00:49:47 +0000</pubDate>
+            <sparkle:version>0.4.0</sparkle:version>
+            <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v0.4.0/LayerLens-0.4.0.dmg"
+                length="2609702"
+                type="application/octet-stream"
+                sparkle:edSignature="Qz2PkTeE7GFSUcwrBTTfH8MaheGE1MH3CdNfZbOd4ngngf9BeB9yc252s7VQOAyTB6vYMNONEOaDfp20BOkYDA==" />
+        </item>
+                <item>
+            <title>Version 0.5.0</title>
+            <pubDate>Sun, 17 May 2026 17:11:53 +0000</pubDate>
+            <sparkle:version>0.5.0</sparkle:version>
+            <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v0.5.0/LayerLens-0.5.0.dmg"
+                length="2773812"
+                type="application/octet-stream"
+                sparkle:edSignature="uVv+HB58WDku5Lp4QPa6yk8Q3jQw6ZAAPV/UrTlD10I5N76nyfN0vMBbeLAlVoeSIsUKxuZH2J92xjNq2ZykCw==" />
+        </item>
+                <item>
+            <title>Version 0.6.0</title>
+            <pubDate>Fri, 12 Jun 2026 01:56:56 +0000</pubDate>
+            <sparkle:version>0.6.0</sparkle:version>
+            <sparkle:shortVersionString>0.6.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v0.6.0/LayerLens-0.6.0.dmg"
+                length="4158145"
+                type="application/octet-stream"
+                sparkle:edSignature="2omB1Fy+NQnrQ7f8zOKymTAjzvSiq5sCUdwcOa3FE8PzJQ9rKII8e2kZtixLHBl0TaoU+s3Tg9oagI5I0z2TCA==" />
+        </item>
+                <item>
+            <title>Version 0.6.1</title>
+            <pubDate>Fri, 07 Aug 2026 22:44:56 +0000</pubDate>
+            <sparkle:version>0.6.1</sparkle:version>
+            <sparkle:shortVersionString>0.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v0.6.1/LayerLens-0.6.1.dmg"
+                length="4216857"
+                type="application/octet-stream"
+                sparkle:edSignature="RFL6JZB7PcfJhS/wbE+s1iOknTdm/DLy9mYQh1zVuoAmeDoR1JZWY0Cf0p+Lcv/VUHEOVWan3bGVYRpWBqqXBw==" />
+        </item>
+        <!-- The release workflow inserts new <item> entries above this comment. -->
+    </channel>
+</rss>

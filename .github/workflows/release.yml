@@ -1,17 +1,33 @@
 name: Release
 
+# Dispatch only. The version is computed as YY.M.revision from the date and
+# the tag list, like every other repo, rather than typed by hand.
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version (without leading v, e.g. 0.1.0)"
+      channel:
+        description: Release channel
         required: true
+        default: rc
+        type: choice
+        options:
+          - rc
+          - stable
+      dry-run:
+        description: Build and sign, but publish nothing and tag nothing
+        required: false
+        default: false
+        type: boolean
+      force-version:
+        description: Re-cut this exact version instead of computing the next one
+        required: false
+        default: ""
+        type: string
 
+# Serialised across the whole repo, not per-ref. This job pushes appcast.xml
+# back to main, and two releases racing there would clobber each other's item.
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-layerlens
   cancel-in-progress: false
 
 jobs:
@@ -19,28 +35,25 @@ jobs:
     name: Build & Sign DMG
     runs-on: macos-latest
     permissions:
-      contents: write   # needed to attach the dmg to the GitHub Release
+      contents: write   # tags, publishes the Release, pushes the appcast
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # compute-version reads the tag list, and a shallow clone has none.
+          fetch-depth: 0
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Resolve version
+      - name: Compute version
         id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            VERSION="${{ inputs.version }}"
-          else
-            VERSION="${GITHUB_REF_NAME#v}"
-          fi
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
-            echo "::error::Version '$VERSION' must be SemVer (e.g. 0.1.0)."
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Building version $VERSION"
+        uses: FireBall1725/workflows/actions/compute-version@v1
+        with:
+          channel: ${{ inputs.channel }}
+          force-version: ${{ inputs.force-version }}
 
       # ─── Code-signing (skipped on PRs and forks where secrets are absent) ───
       # The release workflow expects four secrets, all pulled from the same
@@ -153,12 +166,21 @@ jobs:
           ED_SIG=$(echo "$OUTPUT" | sed -E 's/.*sparkle:edSignature="([^"]+)".*/\1/')
           echo "edSignature=$ED_SIG" >> "$GITHUB_OUTPUT"
 
-      - name: Update appcast.xml
+      - name: Update the appcast feeds
+        # A stable release goes in both feeds; an rc only in the prerelease
+        # one. Sparkle's comparator does not understand SemVer pre-release
+        # precedence, so an rc in the stable feed can be offered to everyone
+        # and then the real release may not look newer than it.
         run: |
-          Tools/update_appcast.sh \
-            "${{ steps.version.outputs.version }}" \
-            "dist/LayerLens-${{ steps.version.outputs.version }}.dmg" \
-            "${{ steps.sparkle.outputs.edSignature }}"
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          DMG="dist/LayerLens-${VERSION}.dmg"
+          SIG="${{ steps.sparkle.outputs.edSignature }}"
+
+          Tools/update_appcast.sh "$VERSION" "$DMG" "$SIG" appcast-prerelease.xml
+          if [ "${{ inputs.channel }}" = "stable" ]; then
+            Tools/update_appcast.sh "$VERSION" "$DMG" "$SIG" appcast.xml
+          fi
 
       - name: Commit appcast.xml back to main
         # The release workflow runs on the tag commit; pushing back to main
@@ -171,15 +193,19 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          cp appcast.xml "$RUNNER_TEMP/appcast.xml"
+          cp appcast.xml appcast-prerelease.xml "$RUNNER_TEMP/"
           git fetch origin main
           git checkout -B main origin/main
-          cp "$RUNNER_TEMP/appcast.xml" appcast.xml
-          git add appcast.xml
+          cp "$RUNNER_TEMP/appcast.xml" "$RUNNER_TEMP/appcast-prerelease.xml" .
+          git add appcast.xml appcast-prerelease.xml
           if git diff --cached --quiet; then
-            echo "appcast.xml unchanged — skipping commit"
+            echo "appcast unchanged — skipping commit"
           else
             git commit -m "appcast: publish v${{ steps.version.outputs.version }}"
+            # Rebase rather than fail: the concurrency group serialises
+            # releases, but anything else landing on main mid-run would
+            # otherwise reject the push after the dmg is already built.
+            git pull --rebase origin main
             git push origin main
           fi
 
@@ -189,27 +215,52 @@ jobs:
           name: LayerLens-${{ steps.version.outputs.version }}-dmg
           path: dist/LayerLens-${{ steps.version.outputs.version }}.dmg
 
-      # Generate the Release body from git history. `--latest` reads
-      # commits between the previous tag and the current one and groups
-      # them by Conventional-Commits prefix per `cliff.toml`. Replaces
-      # GitHub's auto-generated notes (those rely on merged PRs, which
-      # we don't have when shipping straight from main).
+      # Notes come from the shared git-cliff config, so the Release body and
+      # the Discord post are rendered from one source and cannot disagree.
       - name: Generate changelog
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         id: changelog
-        uses: orhun/git-cliff-action@v4
+        uses: FireBall1725/workflows/actions/changelog@v1
         with:
-          config: cliff.toml
-          args: --latest --strip header
+          tag: ${{ steps.version.outputs.tag }}
+          since: ${{ inputs.channel == 'stable' && steps.version.outputs.previous-stable-tag || '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # These two used to be gated on
+      #   github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      # which is false under workflow_dispatch. Moving the trigger without
+      # rewriting them would have built, signed, notarised, committed an
+      # appcast entry pointing at a download that does not exist, and published
+      # no Release at all: every installed copy would then fail its update
+      # check against a 404.
+      - name: Tag release
+        if: ${{ !inputs.dry-run }}
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
 
       - name: Publish GitHub Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        if: ${{ !inputs.dry-run }}
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
           files: dist/LayerLens-${{ steps.version.outputs.version }}.dmg
           body: ${{ steps.changelog.outputs.content }}
-          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          prerelease: ${{ steps.version.outputs.is-prerelease == 'true' }}
+          make_latest: ${{ inputs.channel == 'stable' }}
 
       - name: Clean up keychain
         if: always() && steps.signing.outputs.mode == 'full'
         run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
+
+  # A Discord outage must never fail a release whose dmg and tag are already
+  # published; every step inside the announce workflow is continue-on-error.
+  announce:
+    needs: build-dmg
+    if: ${{ !inputs.dry-run }}
+    uses: FireBall1725/workflows/.github/workflows/announce-discord.yml@v1
+    with:
+      version: ${{ needs.build-dmg.outputs.version }}
+      channel: ${{ inputs.channel }}
+    secrets: inherit
