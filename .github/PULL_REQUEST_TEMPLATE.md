@@ -9,6 +9,8 @@
 - [ ] `swift build`
 - [ ] `swift test`
 - [ ] `swift format lint --strict --recursive Sources Tests`
+- [ ] Every commit signed off (`git commit -s`); the DCO check blocks the
+      merge without it
 - [ ] Manual:
 
 ## Notes for the reviewer
