@@ -55,15 +55,15 @@
         </item>
                 <item>
             <title>Version 26.8.0-rc.1</title>
-            <pubDate>Sat, 08 Aug 2026 15:27:17 +0000</pubDate>
+            <pubDate>Sat, 08 Aug 2026 15:31:16 +0000</pubDate>
             <sparkle:version>26.8.0-rc.1</sparkle:version>
             <sparkle:shortVersionString>26.8.0-rc.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
             <enclosure
                 url="https://github.com/FireBall1725/LayerLens/releases/download/v26.8.0-rc.1/LayerLens-26.8.0-rc.1.dmg"
-                length="4216801"
+                length="4216706"
                 type="application/octet-stream"
-                sparkle:edSignature="pi+L37mzC2SzLIlvCHEHzqtUDPTrJV+eoZoDoIJyliIfg/SwdfzGBtUNSuhtjkLHEJQ8Ye8Nwy7/gsuZFgMZDg==" />
+                sparkle:edSignature="ubl+uHOROWBC2YHCtYv3X4Ct+4Ic3bv+a/mnZ8FWAJ0wpOy0Cq55lRPPVnfdvdiH3jFLOfcERkF0SWDHJ1MABw==" />
         </item>
         <!-- The release workflow inserts new <item> entries above this comment. -->
     </channel>
