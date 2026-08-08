@@ -993,7 +993,7 @@ body { position: relative; isolation: isolate; }
 }
 .site-foot__links a:hover { color: var(--fg-0); }
 .site-foot__legal {
-  grid-column: 1 / -1;
+  grid-column: 1;
   margin: 0;
   font-size: 13px;
   color: var(--fg-3);
@@ -1001,11 +1001,29 @@ body { position: relative; isolation: isolate; }
 .site-foot__legal a { color: var(--fg-2); border-bottom: 1px dotted var(--line); }
 .site-foot__legal a:hover { color: var(--fg-0); }
 
+/* Origin line. Shares the bottom row with the copyright, pinned to the
+   opposite edge, so the two read as one line rather than stacking. */
+.site-foot__origin {
+  grid-column: 2;
+  justify-self: end;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.site-foot__flag {
+  display: block;
+  width: 22px; height: 11px;
+  border-radius: 1px;
+}
+
 @media (max-width: 640px) {
   .site-foot__inner {
     grid-template-columns: 1fr;
   }
   .site-foot__links { justify-self: start; }
+  /* Single column on narrow screens, so the origin line can't sit beside
+     the copyright; let it fall under and align with everything else. */
+  .site-foot__origin { grid-column: 1; justify-self: start; }
 }
 
 /* ─── reveal-on-scroll utility ─── */
