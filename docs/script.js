@@ -64,6 +64,7 @@
 (async () => {
   let version = null;
   let assetUrl = null;
+  let assetSize = null;
 
   try {
     const res = await fetch(
@@ -76,7 +77,10 @@
       if (/^\d+\.\d+\.\d+/.test(tag)) {
         version = tag;
         const dmg = (data.assets || []).find((a) => /\.dmg$/i.test(a.name));
-        if (dmg) assetUrl = dmg.browser_download_url;
+        if (dmg) {
+          assetUrl = dmg.browser_download_url;
+          assetSize = dmg.size;
+        }
       }
     }
   } catch (_) {
@@ -101,6 +105,13 @@
         break;
       case "href":
         el.href = assetUrl || fallbackHref;
+        break;
+      case "size":
+        // Read off the release asset so this can't drift the way the
+        // hardcoded "2.5 MB" did between 0.4.0 and 0.6.1.
+        if (assetSize) {
+          el.textContent = `${(assetSize / 1e6).toFixed(1)} MB universal DMG`;
+        }
         break;
     }
   });
