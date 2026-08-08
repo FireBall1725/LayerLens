@@ -2,7 +2,7 @@
 
 A native macOS overlay that mirrors the active layers of your QMK / Vial keyboard in real time.
 
-**[layerlens.app](https://layerlens.app)** · [Download the latest release](https://github.com/FireBall1725/LayerLens/releases/latest)
+**[layerlens.app](https://layerlens.app)** · [Download the latest release](https://github.com/FireBall1725/LayerLens/releases/latest) · [Discord](https://discord.gg/QpV82CFfVD) · [fireball1725.ca](https://fireball1725.ca)
 
 LayerLens is a Swift rewrite of [KeyPeek](https://github.com/srwi/keypeek) (Rust + egui), targeting macOS exclusively for tighter integration with AppKit, IOKit/IOHIDManager, and SwiftUI.
 
