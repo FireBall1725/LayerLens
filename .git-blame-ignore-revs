@@ -1,0 +1,9 @@
+# Mechanical reformats. Skipped by `git blame` so the real author of a line
+# is the person who wrote it, not the run that reindented it.
+#
+# Configure locally once:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub picks this file up automatically.
+
+# Reformat to the shared 2-space swift-format style (was 4).
+1174bec308a2ea9eab3259ff3f415d3d9f0b4c1c

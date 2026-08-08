@@ -1,0 +1,45 @@
+# Copy to .github/release-announce.yml and edit. Every field is optional; a
+# repo with no file at all still gets a plain title-and-notes embed rather than
+# a failed release.
+#
+# Available placeholders in getting_started and link urls:
+#   {{version}}  26.8.1            {{tag}}      v26.8.1
+#   {{channel}}  stable | rc       {{repo}}     FireBall1725/firebin-mcp
+#   {{image}}    ghcr.io/fireball1725/firebin-mcp:26.8.1
+#   {{compare_url}}  the GitHub compare link against the previous release
+
+project:
+  name: FireBin MCP
+  emoji: "🔥"
+  # Square, ideally 128px or larger. Shown top-right of the embed.
+  thumbnail: https://raw.githubusercontent.com/FireBall1725/firebin/main/media/icon-128.png
+  footer: "FireBin · self-hosted electronics parts inventory"
+
+channels:
+  stable:
+    announce: true
+    colour: "0x2ECC71"
+    prefix: ""
+    # Optional role ping. Omit entirely for no ping; the embed never pings on
+    # its own because allowed_mentions is empty unless this is set.
+    # mention: "<@&1234567890>"
+  rc:
+    announce: true
+    colour: "0xF1C40F"
+    prefix: "Release candidate — "
+  nightly:
+    announce: false
+
+getting_started: |
+  ```
+  docker pull {{image}}
+  ```
+  Homelab: bump `image.tag` in `firebin-mcp/values.yaml`.
+
+links:
+  - name: Source
+    url: https://github.com/{{repo}}
+  - name: Image
+    url: https://github.com/{{repo}}/pkgs/container/firebin-mcp
+  - name: Changes
+    url: "{{compare_url}}"
