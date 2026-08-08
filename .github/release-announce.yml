@@ -1,28 +1,16 @@
-# Copy to .github/release-announce.yml and edit. Every field is optional; a
-# repo with no file at all still gets a plain title-and-notes embed rather than
-# a failed release.
-#
-# Available placeholders in getting_started and link urls:
-#   {{version}}  26.8.1            {{tag}}      v26.8.1
-#   {{channel}}  stable | rc       {{repo}}     FireBall1725/firebin-mcp
-#   {{image}}    ghcr.io/fireball1725/firebin-mcp:26.8.1
-#   {{compare_url}}  the GitHub compare link against the previous release
+# Drives the Discord post in #releases. Field list and placeholders:
+# https://github.com/FireBall1725/workflows/blob/main/templates/release-announce.yml.example
 
 project:
-  name: FireBin MCP
-  emoji: "🔥"
-  # Square, ideally 128px or larger. Shown top-right of the embed.
-  thumbnail: https://raw.githubusercontent.com/FireBall1725/firebin/main/media/icon-128.png
-  footer: "FireBin · self-hosted electronics parts inventory"
+  name: LayerLens
+  emoji: "🔍"
+  footer: "LayerLens · see which layer your keyboard is on"
 
 channels:
   stable:
     announce: true
     colour: "0x2ECC71"
     prefix: ""
-    # Optional role ping. Omit entirely for no ping; the embed never pings on
-    # its own because allowed_mentions is empty unless this is set.
-    # mention: "<@&1234567890>"
   rc:
     announce: true
     colour: "0xF1C40F"
@@ -31,15 +19,16 @@ channels:
     announce: false
 
 getting_started: |
-  ```
-  docker pull {{image}}
-  ```
-  Homelab: bump `image.tag` in `firebin-mcp/values.yaml`.
+  Download the signed `.dmg` from the release and drag it to Applications.
+  Installed copies update themselves through Sparkle.
+
+  Release candidates are **not** offered to the normal update feed. To test
+  one, download it here or point the app at `appcast-prerelease.xml`.
 
 links:
-  - name: Source
-    url: https://github.com/{{repo}}
-  - name: Image
-    url: https://github.com/{{repo}}/pkgs/container/firebin-mcp
+  - name: Site
+    url: https://fireball1725.github.io/LayerLens/
+  - name: Download
+    url: https://github.com/{{repo}}/releases/latest
   - name: Changes
     url: "{{compare_url}}"

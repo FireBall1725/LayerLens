@@ -4,13 +4,26 @@
 # .github/workflows/release.yml between notarisation and the GH release
 # publish step. Idempotent for a given version (re-running won't double up).
 #
-#     Tools/update_appcast.sh <version> <dmg-path> <ed-signature>
+#     Tools/update_appcast.sh <version> <dmg-path> <ed-signature> [appcast-file]
+#
+# Two feeds, because Sparkle's version comparator does not understand SemVer
+# pre-release precedence: it tokenises on "." and compares mixed
+# numeric/alphabetic parts, so 26.8.1-rc.1 is not reliably ordered below
+# 26.8.1. An rc in the stable feed can be offered to everyone, and the real
+# 26.8.1 may then not look newer than the rc they already have.
+#
+#   appcast.xml             stable releases only. What shipped apps read.
+#   appcast-prerelease.xml  everything, stable and rc, for testers.
+#
+# So a stable release is written to BOTH files and an rc only to the
+# prerelease one.
 
 set -euo pipefail
 
 VERSION="${1:?usage: $0 <version> <dmg-path> <ed-signature>}"
 DMG_PATH="${2:?missing dmg path}"
 ED_SIG="${3:?missing EdDSA signature}"
+APPCAST="${4:-appcast.xml}"
 
 if [[ ! -f "$DMG_PATH" ]]; then
     echo "DMG not found at $DMG_PATH" >&2
@@ -20,7 +33,6 @@ fi
 LENGTH=$(stat -f %z "$DMG_PATH")
 PUB_DATE=$(LC_ALL=C date -u +"%a, %d %b %Y %H:%M:%S +0000")
 URL="https://github.com/FireBall1725/LayerLens/releases/download/v${VERSION}/LayerLens-${VERSION}.dmg"
-APPCAST="appcast.xml"
 
 if [[ ! -f "$APPCAST" ]]; then
     echo "$APPCAST not found at repo root" >&2
@@ -73,5 +85,5 @@ with open(appcast, "w", encoding="utf-8") as f:
     f.write(content)
 PY
 
-echo "==> appcast.xml updated for v${VERSION}"
+echo "==> ${APPCAST} updated for v${VERSION}"
 grep "<title>Version " "$APPCAST" | head -5
