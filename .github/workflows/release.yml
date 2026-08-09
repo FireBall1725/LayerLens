@@ -35,7 +35,8 @@ jobs:
     name: Build & Sign DMG
     runs-on: macos-latest
     permissions:
-      contents: write   # tags, publishes the Release, pushes the appcast
+      contents: write        # tags and publishes the Release
+      pull-requests: write   # opens the appcast PR
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -182,32 +183,50 @@ jobs:
             Tools/update_appcast.sh "$VERSION" "$DMG" "$SIG" appcast.xml
           fi
 
-      - name: Commit appcast.xml back to main
-        # The release workflow runs on the tag commit; pushing back to main
-        # records the new <item> so already-installed copies of LayerLens
-        # see the update on their next scheduled check. Save the new
-        # appcast first since `git checkout main` would discard the
-        # uncommitted change.
+      - name: Publish the appcast through a pull request
+        # main is protected and requires a pull request, so this opens one and
+        # merges it rather than pushing directly. A ruleset cares how a change
+        # reaches main, not who sent it, so GITHUB_TOKEN is enough and no
+        # bypass or long-lived PAT is needed.
+        #
+        # The appcast has to land on main specifically: UpdateController's
+        # publicAppcastURL is compiled into every shipped copy and points at
+        # the raw main URL, so an installed app reads that path or it never
+        # sees another update.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # The build ran against the tag, so save the regenerated feeds before
+          # switching branches or the checkout discards them.
           cp appcast.xml appcast-prerelease.xml "$RUNNER_TEMP/"
           git fetch origin main
-          git checkout -B main origin/main
+          git checkout -B "appcast/v${VERSION}" origin/main
           cp "$RUNNER_TEMP/appcast.xml" "$RUNNER_TEMP/appcast-prerelease.xml" .
           git add appcast.xml appcast-prerelease.xml
+
           if git diff --cached --quiet; then
-            echo "appcast unchanged — skipping commit"
-          else
-            git commit -m "appcast: publish v${{ steps.version.outputs.version }}"
-            # Rebase rather than fail: the concurrency group serialises
-            # releases, but anything else landing on main mid-run would
-            # otherwise reject the push after the dmg is already built.
-            git pull --rebase origin main
-            git push origin main
+            echo "appcast unchanged; nothing to publish."
+            exit 0
           fi
+
+          git commit -s -m "appcast: publish v${VERSION}"
+          git push -f origin "HEAD:appcast/v${VERSION}"
+
+          gh pr create --base main --head "appcast/v${VERSION}" \
+            --title "appcast: publish v${VERSION}" \
+            --body "Adds the v${VERSION} entry to the update feed. Opened by the release workflow." \
+            || echo "PR already open."
+
+          # --auto needs the repo setting and a green check; the plain merge is
+          # the fallback so a release does not stall on a config detail. The
+          # appcast is what installed copies read, so it must not sit unmerged.
+          gh pr merge "appcast/v${VERSION}" --squash --delete-branch --auto \
+            || gh pr merge "appcast/v${VERSION}" --squash --delete-branch
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
