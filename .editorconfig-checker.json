@@ -12,7 +12,8 @@
     "package-lock\\.json$",
     "\\.generated\\.swift$",
     "\\.min\\.(js|css)$",
-    "\\.(png|jpg|jpeg|gif|ico|icns|pdf|woff2?|ttf|dmg|zip)$"
+    "\\.(png|jpg|jpeg|gif|ico|icns|pdf|woff2?|ttf|dmg|zip)$",
+    "\\.(assets|fbx|blend)$"
   ],
   "Verbose": false,
   "IgnoreDefaults": false,
