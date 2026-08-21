@@ -110,6 +110,12 @@ Anonymous usage telemetry is **off by default**. Opt in during onboarding
 or via Settings → Privacy. The full data model (what's sent, what's
 not, why) lives in [PRIVACY.md](./PRIVACY.md).
 
+## Support
+
+Questions, updates, and works in progress: [FireBall Codes on Discord](https://discord.gg/QpV82CFfVD).
+
+If this saved you some time, you can [buy me a sushi roll](https://ko-fi.com/fireball1725).
+
 ## License
 
 GPL-3.0-only. See [LICENSE](./LICENSE).
