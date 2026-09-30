@@ -36,6 +36,18 @@ struct QMKKeycodeFormatterTests {
     #expect(QMKKeycodeFormatter.label(for: 0x5CC2, protocolVersion: 10)?.tap == "RGB")
   }
 
+  @Test("RGB matrix keycodes decode on v10 and v12")
+  func rgbMatrixKeycodes() {
+    for v in [10, 12] {
+      #expect(QMKKeycodeFormatter.label(for: 0x7840, protocolVersion: UInt16(v))?.tap == "RGB On")
+      #expect(QMKKeycodeFormatter.label(for: 0x7841, protocolVersion: UInt16(v))?.tap == "RGB Off")
+      #expect(QMKKeycodeFormatter.label(for: 0x7842, protocolVersion: UInt16(v))?.tap == "RGB")
+      #expect(QMKKeycodeFormatter.label(for: 0x7843, protocolVersion: UInt16(v))?.tap == "RGB+")
+      #expect(QMKKeycodeFormatter.label(for: 0x7844, protocolVersion: UInt16(v))?.tap == "RGB-")
+      #expect(QMKKeycodeFormatter.label(for: 0x784B, protocolVersion: UInt16(v))?.tap == "Speed+")
+    }
+  }
+
   @Test("Micro Pad macros (v10) decode as M0 / M1")
   func microPadMacros() {
     #expect(QMKKeycodeFormatter.label(for: 0x5F12, protocolVersion: 10)?.tap == "M0")

@@ -89,9 +89,17 @@ public struct VIAKeycodeMap: Sendable {
 
   public static let minSupportedProtocolVersion: UInt16 = 9
 
-  public static let v10 = VIAKeycodeMap(basicTable: v10BasicTable, ranges: v10Ranges)
-  public static let v11 = VIAKeycodeMap(basicTable: v11BasicTable, ranges: v11Ranges)
-  public static let v12 = VIAKeycodeMap(basicTable: v12BasicTable, ranges: v12Ranges)
+  // `rgbMatrixTable` supplements the generated tables: VIA's own keycode
+  // maps predate QMK's RGB Matrix keycodes, so they need hand labels.
+  public static let v10 = VIAKeycodeMap(
+    basicTable: v10BasicTable.merging(rgbMatrixTable) { _, supplement in supplement },
+    ranges: v10Ranges)
+  public static let v11 = VIAKeycodeMap(
+    basicTable: v11BasicTable.merging(rgbMatrixTable) { _, supplement in supplement },
+    ranges: v11Ranges)
+  public static let v12 = VIAKeycodeMap(
+    basicTable: v12BasicTable.merging(rgbMatrixTable) { _, supplement in supplement },
+    ranges: v12Ranges)
 
   /// Look up a QMK keycode by its symbolic name (e.g. `"KC_LCTL"` → `0x00E0`).
   /// Case-insensitive. If the input has no `KC_`/`QK_`/`RGB_`/etc. prefix,
