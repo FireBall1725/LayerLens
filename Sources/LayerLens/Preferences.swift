@@ -83,6 +83,7 @@ final class Preferences {
   private static let autoConnectVIDPIDsKey = "autoConnectVIDPIDs"
   private static let showMatrixCoordsKey = "showMatrixCoords"
   private static let showHexFallbackKey = "showHexFallback"
+  private static let showShiftedGlyphsKey = "showShiftedGlyphs"
   private static let keycodeOverridesKey = "keycodeOverrides"
   private static let layerNamesKey = "layerNames"
   private static let labelFontNameKey = "labelFontName"
@@ -288,6 +289,14 @@ final class Preferences {
     didSet { defaults.set(showHexFallback, forKey: Self.showHexFallbackKey) }
   }
 
+  /// Draw the small US-layout shifted glyph above keys that have one, the
+  /// way VIA does (e.g. ":" over ";"). On by default; turn it off on boards
+  /// whose shifted symbols live on their own layer to show unshifted labels
+  /// only. Custom label overrides suppress the glyph either way.
+  var showShiftedGlyphs: Bool {
+    didSet { defaults.set(showShiftedGlyphs, forKey: Self.showShiftedGlyphsKey) }
+  }
+
   /// User overrides that replace the default formatter label for a specific
   /// keycode. Keyed by "v10:0xNNNN" / "v12:0xNNNN" so the same byte can mean
   /// different things between protocol versions.
@@ -380,6 +389,7 @@ final class Preferences {
 
     self.showMatrixCoords = (defaults.object(forKey: Self.showMatrixCoordsKey) as? Bool) ?? true
     self.showHexFallback = (defaults.object(forKey: Self.showHexFallbackKey) as? Bool) ?? true
+    self.showShiftedGlyphs = (defaults.object(forKey: Self.showShiftedGlyphsKey) as? Bool) ?? true
     self.onboardingComplete = defaults.bool(forKey: Self.onboardingCompleteKey)
 
     // Log level: stored as the LogLevel.rawValue Int. Default to .info

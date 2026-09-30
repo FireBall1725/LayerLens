@@ -288,6 +288,7 @@ struct SettingsView: View {
       Section("On every key") {
         Toggle("Show matrix coordinates (e.g. \"0,3\")", isOn: $preferences.showMatrixCoords)
         Toggle("Show hex code when no human-readable label exists", isOn: $preferences.showHexFallback)
+        Toggle("Show shifted legends (e.g. \"!\" above \"1\")", isOn: $preferences.showShiftedGlyphs)
       }
 
       Section("Font") {
