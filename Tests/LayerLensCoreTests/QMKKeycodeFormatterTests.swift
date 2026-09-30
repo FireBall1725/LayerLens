@@ -143,4 +143,13 @@ struct QMKKeycodeFormatterTests {
     let l = QMKKeycodeFormatter.label(for: 0x031E, protocolVersion: 10)
     #expect(l?.tap != "!")
   }
+
+  @Test("Shifted-glyph shortcut colours as a basic key, not a modifier")
+  func shiftGlyphKindIsBasic() {
+    // Firmware symbol aliases (KC_EXLM, KC_COLN, ...) compile to LSFT(...).
+    // They are symbol keys, so they take the regular theme colour.
+    #expect(QMKKeycodeFormatter.label(for: 0x021E, protocolVersion: 10)?.kind == .basic)  // LSFT(1) -> !
+    #expect(QMKKeycodeFormatter.label(for: 0x0233, protocolVersion: 10)?.kind == .basic)  // LSFT(;) -> :
+    #expect(QMKKeycodeFormatter.label(for: 0x121E, protocolVersion: 12)?.kind == .basic)  // RSFT(1) -> !
+  }
 }
