@@ -425,8 +425,13 @@ final class OverlayController {
 
     let delegate = OverlayWindowDelegate(
       onClose: { [weak self] in
+        // Don't clear the persisted "show overlay" preference here.
+        // Quitting the app closes the panel and lands in this callback,
+        // so clearing it would make the overlay silently forget it was
+        // pinned across every quit/relaunch (and every reinstall). The
+        // explicit hide() path already clears the preference, and the
+        // live panel is click-through, so the user can't close it by hand.
         self?.isPinned = false
-        self?.preferences?.overlayVisible = false
         self?.panel = nil
       }
     )
