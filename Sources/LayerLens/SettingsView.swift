@@ -109,6 +109,13 @@ struct SettingsView: View {
         Toggle("Start LayerLens at login", isOn: startAtLoginBinding)
       }
 
+      Section("Updates") {
+        Toggle("Include prerelease builds", isOn: $preferences.includePrereleases)
+        Text("Release candidates arrive before stable releases and may have rough edges.")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      }
+
       Section("Legacy fallback") {
         Toggle(
           "Connect to first detected keyboard on launch (if no auto-connect set)",
