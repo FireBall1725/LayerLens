@@ -106,11 +106,13 @@ public enum QMKKeycodeFormatter {
 
     // VIA-style shortcut: shift-only on a key that has a known shifted glyph
     // renders as the shifted glyph (e.g., LSFT(KC_1) -> "!"). US layout only;
-    // non-US shift maps would need a setting later.
+    // non-US shift maps would need a setting later. Classified as a basic
+    // key: firmware symbol aliases like KC_EXLM compile to LSFT(KC_1), and
+    // those are symbol keys, not modifiers, so they take the regular colour.
     if mods == QMKModBit.lsft || mods == QMKModBit.rsft,
       let shifted = usShiftedGlyphs[baseKC]
     {
-      return QMKKeycodeLabel(tap: shifted, kind: .modifier)
+      return QMKKeycodeLabel(tap: shifted, kind: .basic)
     }
 
     if let alias = qmkModifierAliases.first(where: { $0.mask == mods }) {
