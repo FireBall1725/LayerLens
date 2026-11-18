@@ -279,9 +279,10 @@ private struct KeyView: View {
 
   /// Alt-glyph (e.g. "!") for keys that have a shifted variant, drawn
   /// above the primary label like VIA does. Suppressed when the user has
-  /// set a custom override; they expect their text exactly.
+  /// set a custom override (they expect their text exactly) or turned off
+  /// "Show shifted legends".
   private var shiftedGlyph: String? {
-    guard let kc = keycode, override == nil else { return nil }
+    guard let kc = keycode, override == nil, preferences.showShiftedGlyphs else { return nil }
     return QMKKeycodeFormatter.usShiftedGlyph(forKeycode: kc)
   }
 

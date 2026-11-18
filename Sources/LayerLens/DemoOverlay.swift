@@ -147,7 +147,7 @@ struct DemoOverlayView: View {
             .stroke(.white.opacity(0.10), lineWidth: 1)
         )
       VStack(alignment: .leading, spacing: 1) {
-        if let alt = k.altGlyph {
+        if let alt = k.altGlyph, preferences.showShiftedGlyphs {
           Text(alt)
             .font(preferences.font(size: primarySize - 1))
             .foregroundStyle(preferences.colourText.opacity(0.65))
