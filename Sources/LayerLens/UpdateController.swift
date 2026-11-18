@@ -14,6 +14,13 @@ final class UpdateController: NSObject {
     string: "https://raw.githubusercontent.com/FireBall1725/LayerLens/main/appcast.xml"
   )!
 
+  /// Stable and release-candidate builds together. Same location rules as
+  /// `publicAppcastURL`; only read when the user turns on "Include
+  /// prerelease builds" in Settings.
+  nonisolated static let prereleaseAppcastURL = URL(
+    string: "https://raw.githubusercontent.com/FireBall1725/LayerLens/main/appcast-prerelease.xml"
+  )!
+
   private var updaterController: SPUStandardUpdaterController!
 
   var updater: SPUUpdater { updaterController.updater }
@@ -37,6 +44,8 @@ final class UpdateController: NSObject {
 
 extension UpdateController: SPUUpdaterDelegate {
   nonisolated func feedURLString(for updater: SPUUpdater) -> String? {
-    UpdateController.publicAppcastURL.absoluteString
+    let prerelease = UserDefaults.standard.bool(forKey: Preferences.includePrereleasesKey)
+    return (prerelease ? UpdateController.prereleaseAppcastURL : UpdateController.publicAppcastURL)
+      .absoluteString
   }
 }
