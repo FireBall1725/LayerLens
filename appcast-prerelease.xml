@@ -77,6 +77,18 @@
                 type="application/octet-stream"
                 sparkle:edSignature="Y3KBOuC2JbQzvKWGIKoU00aAgDiCZAYunwYvkNxrtfQMPLtwHm5+FUAMD7LNDPz8oLwyaywyYNuepk++QrvNDw==" />
         </item>
+                <item>
+            <title>Version 26.11.0-rc.2</title>
+            <pubDate>Wed, 18 Nov 2026 23:08:45 +0000</pubDate>
+            <sparkle:version>26.11.0-rc.2</sparkle:version>
+            <sparkle:shortVersionString>26.11.0-rc.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/FireBall1725/LayerLens/releases/download/v26.11.0-rc.2/LayerLens-26.11.0-rc.2.dmg"
+                length="4220192"
+                type="application/octet-stream"
+                sparkle:edSignature="WguTHsb6bI/Go79Bh35P9FvoB4Ecufiajmyx1d1bG1Zm+/KgITTV15DKZ3/p/wMFGxFM1RzVdhJNpXmbyUoSCg==" />
+        </item>
         <!-- The release workflow inserts new <item> entries above this comment. -->
     </channel>
 </rss>
